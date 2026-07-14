@@ -1,0 +1,3 @@
+sample0; 111.60mA
+sample5; 91.56mA
+sample10; 100.28mA
