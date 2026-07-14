@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import re
-from datetime import datetime
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 import torch
 
@@ -25,83 +24,6 @@ def _safe_split_timestamp(data_sorted, split_idx):
         return None
 
     return data_sorted.iloc[idx]['timestamp']
-
-def load_and_process_checkin_data():
-    # Load data from the online Dropbox Excel file
-    dropbox_url = "https://www.dropbox.com/scl/fi/k1q5dlfs6o8u8ye7lulou/Check-in.xlsx?rlkey=uz6t8xys1esaum6zfdaduarzz&st=v2zgpnc0&dl=1"
-
-    online_data = pd.read_excel(dropbox_url)
-
-    # Re-read as raw strings so pandas doesn't misinterpret time cells
-    raw_data = pd.read_excel(dropbox_url, dtype=str, header=0)
-
-    day_col  = raw_data.columns[0]
-    time_col = raw_data.columns[1]
-
-    # Forward-fill dates to cover OFF rows that leave the date cell blank
-    raw_data[day_col] = raw_data[day_col].ffill()
-
-    def parse_time_str(val_str):
-        val_str = str(val_str).strip()
-        m = re.match(r'^(\d{1,2})h(\d{2})', val_str)          # 8h45, 18h37
-        if m: return int(m.group(1)), int(m.group(2))
-        m = re.match(r'^(\d{1,2}):(\d{2})', val_str)           # 09:00, 8:45
-        if m: return int(m.group(1)), int(m.group(2))
-        m = re.search(r'(\d{1,2}):(\d{2}):\d{2}', val_str)    # 0 days 09:00:00
-        if m: return int(m.group(1)), int(m.group(2))
-        try:                                                     # 0.375 (Excel fraction)
-            f = float(val_str)
-            if 0.0 <= f < 1.0:
-                total_minutes = round(f * 24 * 60)
-                return divmod(total_minutes, 60)
-        except ValueError:
-            pass
-        return None
-
-    def parse_date_str(val_str):
-        val_str = str(val_str).strip()
-        if re.match(r'^\d{2}/\d{2}/\d{4}$', val_str):          # DD/MM/YYYY
-            return val_str
-        m = re.match(r'^(\d{4})-(\d{2})-(\d{2})', val_str)     # 2026-02-13 ...
-        if m: return f"{m.group(3)}/{m.group(2)}/{m.group(1)}"
-        return None
-
-    check_in_data = []
-    for idx, row in raw_data.iterrows():
-        raw_day, raw_time = row[day_col], row[time_col]
-        if pd.isna(raw_day) or pd.isna(raw_time):
-            continue
-        date_str = parse_date_str(raw_day)
-        if date_str is None:
-            continue
-        parsed = parse_time_str(raw_time)
-        if parsed is None:
-            print(f"WARNING row {idx}: cannot parse time '{raw_time}' — row skipped!")
-            continue
-        h, mn = parsed
-        check_in_data.append({
-            'Day':      date_str,
-            'Time':     f"{h}h{mn:02d}",
-            'DateTime': datetime.datetime.strptime(f"{date_str} {h}:{mn:02d}", '%d/%m/%Y %H:%M')
-        })
-
-    check_in_df = pd.DataFrame(check_in_data)
-
-    # Even rows = ON, odd rows = OFF
-    uptime_data = []
-    for i in range(0, len(check_in_df) - 1, 2):
-        on_time  = check_in_df.iloc[i]['DateTime']
-        off_time = check_in_df.iloc[i + 1]['DateTime']
-        uptime_hours = (off_time - on_time).total_seconds() / 3600
-        uptime_data.append({'Date': on_time.date(), 'Uptime_hours': uptime_hours})
-
-    uptime_df = pd.DataFrame(uptime_data)
-    print(f"Total uptime: {uptime_df['Uptime_hours'].sum():.1f} hours")
-    uptime_df
-
-    uptime_df.to_csv(r"C:\Users\au585732\OneDrive - Aarhus universitet\Thesis\Datasets\UTTOP Test\Corrosion_Dataset\uptime.csv", index=False)
-
-# ===============================================================================
 
 def calculate_mass_loss(current_df, uptime_df):
 
@@ -143,7 +65,8 @@ def calculate_mass_loss(current_df, uptime_df):
 
     mass_loss_df = pd.DataFrame(mass_loss_data)
 
-    mass_loss_df.to_csv(r"C:\Users\au585732\OneDrive - Aarhus universitet\Thesis\Datasets\UTTOP Test\Corrosion_Dataset\mass_loss.csv", index=False)
+    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Corrosion_Dataset", "mass_loss.csv")
+    mass_loss_df.to_csv(out_path, index=False)
 
 
 # ===============================================================================
