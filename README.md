@@ -11,8 +11,9 @@ The primary goal is to use **BVD circuit fitting as a feature-extraction step** 
 ### Prerequisites
 
 ```bash
-pip install numpy pandas scipy matplotlib openpyxl
+pip install numpy pandas scipy matplotlib openpyxl torch scikit-learn
 ```
+
 
 ### 1. Raw data scaling (always required)
 
