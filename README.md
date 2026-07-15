@@ -51,9 +51,13 @@ $$Z(\omega) = R_0 + \frac{1}{\frac{1}{Z_\text{mot}} + \frac{1}{Z_\text{sta}}}, \
 | `C1` | Mechanical compliance (inverse stiffness) |
 | `f_s = 1/(2π√L₁C₁)` | Series resonance — decreases with mass loading (Sauerbrey analogue) |
 
+![BVD equivalent circuit and impedance response](Figures/BVD-circuit-and-impedance.png)
+
 ### 4. Machine learning
 
 Open [ML_Alt_CNN.ipynb](ML_Alt_CNN.ipynb). This notebook trains a 1-D CNN on raw impedance spectra, optionally augmented with fitted BVD parameters, to predict cumulative corrosion mass loss.
+
+![CNN parity plots — leave-one-sample-out cross-validation](Figures/CNN_Parity_Plots_LOSO.png)
 
 ---
 
@@ -91,9 +95,14 @@ BVD-Features-for-EMI/
 Time-series of impedance sweeps acquired throughout the accelerated corrosion test.
 
 - **Samples:** `sample_0`, `sample_5`, `sample_10` — three steel probes, each with a PZT patch bonded to the surface. The number indicates nominal corrosion exposure time in days at the start of the experiment.
+
+![Sample progression — physical appearance over the test duration](Images/Sample%20progression/All_Samples_Final.jpg)
+
 - **Session folders:** named `YYYY-MM-DD_HH-MM-SS_T.TC_H.HRH/`, encoding the measurement timestamp, ambient temperature (°C), and relative humidity (%).
 - **`calibrated_mass_loss.csv`** — Faraday-law corrected cumulative mass loss per sample; used as the ground-truth target for machine learning.
 - **`mass_loss.csv` / `uptime.csv`** — raw gravimetric and uptime logs for reference.
+
+![Interpolated cumulative mass loss per sample](Figures/Interpolated_Cum_Mass_loss.png)
 
 #### Per-sample CSV columns
 
